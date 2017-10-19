@@ -1,6 +1,6 @@
 # vue-koms
 
-> A Vue.js project
+> kokoko管理平台
 
 ## Build Setup
 
