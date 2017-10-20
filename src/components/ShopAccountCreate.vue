@@ -95,7 +95,7 @@
     },
     methods: {
       changeStep(){
-        this.$refs.OCForm.validate((valid) => {
+        this.$refs.SAForm.validate((valid) => {
           if (valid) {
             console.log(this.model)
             this.step = 0;

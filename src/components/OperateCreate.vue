@@ -148,7 +148,6 @@
             this.step = 0;
             setTimeout(()=>{
               this.step = 2;
-              console.log(this.step)
             }, 500);
           } else {
             console.log('error submit!!');
