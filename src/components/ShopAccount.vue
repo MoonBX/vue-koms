@@ -86,6 +86,7 @@
   }
 </style>
 <script>
+  import { bus } from '../util/bus.js'
   import ShopAccountCreate from '@/components/ShopAccountCreate'
   export default{
     data(){
@@ -108,7 +109,6 @@
         this.modalVisible[value] = false;
       },
       changeStep(){
-        this.step = 2;
         this.$refs.shopAccountCreateRef.changeStep();
       },
       showConfirm () {
@@ -121,7 +121,12 @@
           onCancel: function () {}
         })
       }
+    },
+    created(){
+      bus.$on('SAForm_step_change', (text) => {
+        this.step = text[0];
+        console.log(this.step)
+      })
     }
-
   }
 </script>

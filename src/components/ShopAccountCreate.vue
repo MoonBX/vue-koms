@@ -27,6 +27,7 @@
 <style lang="scss" scoped>
 </style>
 <script type="text/ecmascript-6">
+  import { bus } from '../util/bus.js'
   export default {
     data() {
       var validatePass2 = (rule, value, callback) => {
@@ -101,7 +102,7 @@
             this.step = 0;
             setTimeout(()=>{
               this.step = 2;
-              console.log(this.step)
+              bus.$emit('SAForm_step_change', [this.step, 'create']);
             }, 500);
           } else {
             console.log('error submit!!');

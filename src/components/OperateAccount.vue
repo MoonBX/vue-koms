@@ -135,6 +135,7 @@
 }
 </style>
 <script>
+  import { bus } from '../util/bus.js'
   import OperateCreate from '@/components/OperateCreate'
   export default{
     name: 'announce',
@@ -160,7 +161,6 @@
         this.modalVisible[value] = false;
       },
       changeStep(){
-        this.step = 2;
         this.$refs.announceCreateRef.changeStep();
       },
       showConfirm () {
@@ -178,6 +178,10 @@
       }
     },
     created(){
+      bus.$on('OCForm_step_change', (text) => {
+        this.step = text[0];
+        console.log(this.step)
+      })
     }
   }
 </script>
