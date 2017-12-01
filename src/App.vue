@@ -93,4 +93,27 @@
     padding-left: 0px;
     padding-right: 0px;
   }
+  form .has-feedback > .ant-select .ant-select-arrow, form .has-feedback > .ant-select .ant-select-selection__clear, form .has-feedback :not(.ant-input-group-addon) > .ant-select .ant-select-arrow, form .has-feedback :not(.ant-input-group-addon) > .ant-select .ant-select-selection__clear {
+    right: 12px !important;
+  }
+  .ant-upload-list{
+    display: none !important;
+  }
+
+  .ant-notification{
+    width: 275px !important;
+  }
+  .ant-notification-notice-message{
+    font-size: 14px !important;
+    position: relative !important;
+    top: 2px !important;
+    margin-left: 36px !important;
+  }
+  .ant-notification-notice-icon{
+    font-size: 24px !important;
+  }
+  .ant-notification-notice-with-icon .ant-notification-notice-description {
+    margin-left: 36px !important;
+    font-size: 12px !important;
+  }
 </style>

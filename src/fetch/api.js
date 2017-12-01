@@ -2,7 +2,7 @@
  * Created by zhongyuqiang on 2017/10/9.
  */
 import axios from 'axios'
-axios.defaults.baseURL = 'http://114.55.143.170:8082';
+axios.defaults.baseURL = 'http://192.168.22.139:8088';
 
 axios.interceptors.request.use(function (config) {    // 这里的config包含每次请求的内容
   if (localStorage.vueToken) {
@@ -59,51 +59,70 @@ export function get(url, params) {
 }
 
 export default {
-  /**
-   * 用户登录
-   */
-  Login(data) {
-    return post('/account/login', data)
+  login(obj){
+    return login('/account/administrator/login', obj)
   },
-
-  Logout() {
-    return get('/account/logout')
+  oLogin(obj){
+    return login('/account/operateAccount/login', obj)
   },
-
-  getComplaint(pageNo, limit, params) {
-    return get('/estate/complaint/list/'+pageNo+'/'+limit, params);
+  getOperatorList(obj){
+    return get('/operator/list', obj)
   },
-
-  getAlarmInfo(){
-    return get('/device/alarmInfo/list')
+  getShopList(obj){
+    return get('/shop/account/list', obj)
   },
-
-  getStatistics(){
-    return get('/community/statistics/homepage')
+  getOrderList(obj){
+    return get('/order/tradeList', obj)
   },
-
-  dealComplaint(id, data){
-    return get('/estate/complaint/'+id+'/updateStatus/'+data)
+  frozenAccount(obj){
+    return post('/account/frozen', obj)
   },
-
-  // 公告管理
-  getAnnounce(pageNo, limit, params){
-    return get('/community/announcement/list/' + pageNo + '/' + limit, params);
+  thawingAccount(obj){
+    return post('/account/thawing', obj)
   },
-  getDeviceDetail(){
-    return get('/community/device/detail/');
+  getShopInfoList(obj){
+    return get('/shop/shopInfo/list', obj)
   },
-  createAnnounce(data){
-    return post('/community/announcement/add', data);
+  getUserInfoList(obj){
+    return get('/user/userInfo/list', obj)
   },
-  deleteAnnounce(id){
-    return post('/community/announcement/'+id+'/delete')
+  getCommunityList(obj){
+    return get('community/list', obj)
   },
-  editAnnounce(id){
-    return post('/community/announcement/'+id+'/edit')
+  getShopListAll(obj){
+    return get('/shop/list', obj)
   },
-  editAnnounceSave(data){
-    return post('/community/announcement/editSave', data)
+  createShopInfo(obj){
+    return post('/account/shopInfo/modify', obj)
+  },
+  regOperator(obj){
+    return post('/account/operatAccount/register', obj)
+  },
+  regShop(obj){
+    return post('/account/shopAccount/register', obj);
+  },
+  editShopAccount(obj){
+    return post('/account/shopAccount/modify', obj)
+  },
+  editOperateAccount(obj){
+    return post('/account/operatAccount/modify', obj)
+  },
+  createCharge(obj){
+    return post('/shop/charge', obj);
+  },
+  getChargeList(obj){
+    return get('/shop/charge/list', obj);
+  },
+  verifyPwd(obj){
+    return post('/user/verificat/pwd', obj);
+  },
+  exportShopInfoList(obj){
+    return get('/shop/shopInfo/list/excel/auto', obj)
+  },
+  exportUserList(obj){
+    return get('/user/userInfo/list/excel/auto', obj)
+  },
+  dredge(obj){
+    return post('/account/openAccountMoneyStatus', obj)
   }
-
 }

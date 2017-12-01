@@ -72,7 +72,10 @@ export default new Router({
     {
       path: '/login',
       name: 'login',
-      component: Login
+      component: Login,
+      meta: {
+        pageTitle: '登录'
+      }
     }
   ]
 })

@@ -6,7 +6,9 @@
           <v-input v-model="filterList.name" placeholder="请输入商家名称" style="width: 200px;"></v-input>
         </v-form-item>
         <v-form-item label="时间范围" class="m-b-sm">
-          <v-date-picker v-model="filterList.dateTime" placeholder="请选择时间范围"  range clearable></v-date-picker>
+          <v-date-picker v-model="tempList.startTime" :disabled-date="disabledStartDate"></v-date-picker>
+          <span>-</span>
+          <v-date-picker v-model="tempList.endTime" :disabled-date="disabledEndDate"></v-date-picker>
         </v-form-item>
         <div class="row text-center">
           <v-button type="primary" style="margin-right:10px">
@@ -38,22 +40,22 @@
                 <table class="wk-table" style="table-layout:fixed;">
                   <thead class="ant-table-thead">
                   <tr>
-                    <th width="16%">交易时间</th>
-                    <th width="16%">订单号</th>
-                    <th width="16%">交易类型</th>
-                    <th width="16%">金额/元</th>
-                    <th width="16%">支付方式</th>
-                    <th width="16%">商家名称</th>
+                    <th width="25%">订单号</th>
+                    <th width="25%">商家名称</th>
+                    <th width="25%">交易时间</th>
+                    <!--<th width="16%">交易类型</th>-->
+                    <th width="25%">金额/元</th>
+                    <!--<th width="16%">支付方式</th>-->
                   </tr>
                   </thead>
                   <tbody class="ant-table-tbody">
-                  <tr>
-                    <td>2016-11-11</td>
-                    <td>123123123123</td>
-                    <td>商家充值</td>
-                    <td>3400.00</td>
-                    <td>银行转账</td>
-                    <td>杭州万家花城</td>
+                  <tr v-for="item in chargeList">
+                    <td>{{item.orderId}}</td>
+                    <td>{{item.shopName}}</td>
+                    <td>{{item.tradeTime}}</td>
+                    <!--<td>{{}}</td>-->
+                    <td>{{item.amount}}</td>
+                    <!--<td>银行转账</td>-->
                   </tr>
                   <div style="width: 100%;height: 20px;"></div>
                   </tbody>
@@ -63,6 +65,15 @@
           </div>
         </div>
       </div>
+      <v-pagination class="m-t-md m-b-md"
+                    v-model="page.value"
+                    :pageSize="10"
+                    :showTotal="showTotal"
+                    @change="loadPage"
+                    show-quick-jumper
+                    ref="pagination"
+                    :total="page.total">
+      </v-pagination>
     </div>
     <div class="g-modal">
       <v-modal title="新增充值记录"
@@ -76,8 +87,19 @@
             取 消
           </v-button>
           <v-button key="confirm"
-                    type="primary" @click="cancelModal('create')">
+                    v-if="step == 1"
+                    type="primary" @click="nextStep">
             下一步
+          </v-button>
+          <v-button key="confirm"
+                    v-if="step == 2"
+                    type="primary" @click="prevStep">
+            上一步
+          </v-button>
+          <v-button key="confirm"
+                    v-if="step == 2"
+                    type="primary" @click="submit">
+            提 交
           </v-button>
         </div>
       </v-modal>
@@ -88,18 +110,21 @@
 </style>
 <script type="text/ecmascript-6">
   import ShopRechargeCreate from '@/components/ShopRechargeCreate'
+  import api from '../fetch/api'
+  import { extend } from '../util/extend'
+  import { bus } from '../util/bus.js'
   export default {
     data() {
       return {
         filterList:{
-          title: "",
+          shopName: "",
+          startTime: "",
+          endTime: ""
+        },
+        tempList: {
           dateTime: "",
-          status: "",
-          shopHead: "",
-          pingtai: "",
-          saoma: "",
-          village: "",
-          balance: ""
+          startTime: "",
+          endTime: ""
         },
         modalVisible:{
           create: false
@@ -126,7 +151,18 @@
             value: '1',
             label: '在线'
           }]
-        }
+        },
+        page: {
+          total: 0,
+          value: 1
+        },
+        obj: {
+          uid : localStorage.koUid,
+          token : localStorage.koToken,
+          pagesize : 10
+        },
+        step: 1,
+        chargeList: []
       }
     },
     components:{
@@ -138,10 +174,56 @@
       },
       cancelModal(value){
         this.modalVisible[value] = false;
+        this.step = 1;
       },
+      prevStep(){
+        this.$refs.shopRechargeCreateRef.prevStep()
+      },
+      nextStep(){
+        this.$refs.shopRechargeCreateRef.nextStep()
+      },
+      submit(){
+        this.$refs.shopRechargeCreateRef.submit()
+      },
+      disabledStartDate(current){
+        return current && current.valueOf() > Date.parse(new Date(this.tempList.endTime));
+      },
+      disabledEndDate(current){
+        return current && current.valueOf() < Date.parse(new Date(this.tempList.startTime));
+      },
+      showTotal(total){
+        return `全部 ${total} 条`;
+      },
+      loadPage(i){
+        this.getShopInfoList(i)
+      },
+      getChargeList(curPage){
+        this.obj.curPage = curPage;
+        api.getChargeList(this.obj).then(res => {
+          console.log(res);
+          this.page.total = res.total;
+          this.chargeList = res.result;
+        })
+      }
     },
     created() {
-
+      this.getChargeList(1);
+      document.title = '商家管理';
+      bus.$off('RCForm_model');
+      bus.$on('RCForm_model', (text) => {
+        if(text[1] == 2){
+          this.step = 2;
+        }else if(text[1] == 1){
+          this.step = 1;
+        }
+        if(text[2] == 'submit'){
+          api.createCharge(text[0]).then(res => {
+            console.log(res);
+            this.getChargeList(1);
+            this.cancelModal('create')
+          })
+        }
+      })
     }
   }
 </script>

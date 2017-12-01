@@ -31,47 +31,19 @@
                   </tr>
                   </thead>
                   <tbody class="ant-table-tbody">
-                  <tr>
+                  <tr v-for="item in operatorList">
                     <td>
-                      <input type="checkbox" :checked="selectToggle">
+                      <input type="checkbox" :checked="selectToggle" v-bind:value="item.uid" class="checkbox">
                     </td>
-                    <td>郭德纲</td>
+                    <td>{{item.userName}}</td>
                     <td>
-                      <span class="state-circle bg-success"></span>
-                      正常
-                    </td>
-                    <td>
-                      <a href="javascript:;" class="m-r-sm">
-                        编辑
-                      </a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <input type="checkbox" :checked="selectToggle">
-                    </td>
-                    <td>郭德纲</td>
-                    <td>
-                      <span class="state-circle bg-success"></span>
-                      正常
+                      <span class="state-circle"
+                            :class="{'bg-success': item.userStatus == '1', 'bg-danger': item.userStatus == '0'}">
+                      </span>
+                      {{item.userStatus_cn}}
                     </td>
                     <td>
-                      <a href="javascript:;" class="m-r-sm">
-                        编辑
-                      </a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <input type="checkbox" :checked="selectToggle">
-                    </td>
-                    <td>郭德纲</td>
-                    <td>
-                      <span class="state-circle bg-success"></span>
-                      正常
-                    </td>
-                    <td>
-                      <a href="javascript:;" class="m-r-sm">
+                      <a href="javascript:;" class="m-r-sm" @click="showModal('edit', item)">
                         编辑
                       </a>
                     </td>
@@ -84,6 +56,15 @@
           </div>
         </div>
       </div>
+      <v-pagination class="m-t-md m-b-md"
+                    v-model="page.value"
+                    :pageSize="10"
+                    :showTotal="showTotal"
+                    @change="loadPage"
+                    show-quick-jumper
+                    ref="pagination"
+                    :total="page.total">
+      </v-pagination>
     </div>
     <div class="g-modal">
       <v-modal title="新建账号"
@@ -102,6 +83,26 @@
           </v-button>
           <v-button key="confirm" v-if="step == 2"
                     type="primary" @click="cancelModal('create')">
+            提 交
+          </v-button>
+        </div>
+      </v-modal>
+      <v-modal title="编辑账号"
+               :visible="modalVisible.edit"
+               :width="500"
+               @cancel="cancelModal('edit')">
+        <operate-edit :item="itemParam" ref="announceEditRef"></operate-edit>
+        <div slot="footer">
+          <v-button key="cancel"
+                    @click="cancelModal('edit')">
+            取 消
+          </v-button>
+          <v-button key="confirm" v-if="step == 1"
+                    type="primary" @click="changeEditStep()">
+            下一步
+          </v-button>
+          <v-button key="confirm" v-if="step == 2"
+                    type="primary" @click="cancelModal('edit')">
             提 交
           </v-button>
         </div>
@@ -135,27 +136,51 @@
 }
 </style>
 <script>
+  import api from '../fetch/api'
   import { bus } from '../util/bus.js'
   import OperateCreate from '@/components/OperateCreate'
+  import OperateEdit from '@/components/OperateEdit'
   export default{
     name: 'announce',
     data(){
       return {
         modalVisible:{
-          create: false
+          create: false,
+          edit: false
         },
         step: 1,
         selectToggle: 0,
-        checked: ""
+        checked: "",
+        operatorList: [],
+        page: {
+          total: 0,
+          value: 1
+        },
+        obj: {
+          uid : localStorage.koUid,
+          token : localStorage.koToken,
+          pagesize : 10
+        },
+        itemParam: {}
       }
     },
     components:{
-      OperateCreate
+      OperateCreate,
+      OperateEdit
     },
     methods: {
-      showModal(value){
+      showModal(value, param){
+        if(param){
+          this.itemParam = param;
+        }
         this.modalVisible[value] = true;
         this.step = 1;
+      },
+      showTotal(total){
+        return `全部 ${total} 条`;
+      },
+      loadPage(i){
+        this.getOperatorList(i)
       },
       cancelModal(value){
         this.modalVisible[value] = false;
@@ -163,24 +188,74 @@
       changeStep(){
         this.$refs.announceCreateRef.changeStep();
       },
+      changeEditStep(){
+        this.$refs.announceEditRef.changeStep();
+      },
       showConfirm () {
+        var arr = [],
+          frozenObj = {
+            uid: localStorage.koUid,
+            token: localStorage.koToken
+          },
+          el = document.getElementsByClassName('checkbox');
+
+        for(let i=0;i<el.length;i++){
+          if(el[i].checked == true){
+            arr.push(el[i].value);
+          }
+        }
+        frozenObj.uidList = arr;
+
         this.$modal.confirm({
           title: '是否确认冻结已选中账号？',
           content: '冻结后，该商家不会出现在APP商家列表中，且商家二维码不可用。',
           onOk: function () {
-            console.log('确定')
+            api.frozenAccount(frozenObj).then(res => {
+              console.log(res);
+            })
           },
-          onCancel: function () {}
+          onCancel: function () {
+
+          }
         })
       },
       selectAll(){
         this.selectToggle = !this.selectToggle;
+      },
+      getOperatorList(curPage){
+        this.obj.curPage = curPage;
+        api.getOperatorList(this.obj).then(res => {
+          console.log(res);
+          for (var i = 0; i < res.result.length; i++) {
+            switch (res.result[i].userStatus) {
+              case 0:
+                res.result[i].userStatus_cn = '冻结';
+                break;
+              case 1:
+                res.result[i].userStatus_cn = '正常';
+                break;
+              default:
+                res.result[i].userStatus_cn = '';
+            }
+          }
+          this.page.total = res.total;
+          this.operatorList = res.result;
+        });
       }
     },
     created(){
+      document.title = '账号管理'
+      this.getOperatorList(1);
+
       bus.$on('OCForm_step_change', (text) => {
-        this.step = text[0];
-        console.log(this.step)
+//        this.step = text[0];
+        if(text[1] == 'edit'){
+          this.cancelModal('edit');
+        }else{
+          this.cancelModal('create');
+        }
+
+        this.getOperatorList(1);
       })
     }
   }

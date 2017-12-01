@@ -3,6 +3,9 @@
     <v-layout>
       <v-header>
         {{title}}
+        <span class="pull-right">
+          <a href="javascript:;" @click="logout">登出</a>
+        </span>
       </v-header>
       <v-sider style="flex: 0 0 230;width: 230px;position:fixed; height: 100%">
         <div class="sdn-brand">
@@ -42,6 +45,10 @@
       fetchTitle(){
         this.title = this.$route.name;
       },
+      logout(){
+        console.log('d');
+        this.$router.push('login');
+      }
     },
     created(){
       this.fetchTitle();
@@ -59,8 +66,8 @@
           {name: "商家充值", href: 'shopRecharge'}]
         },
         {name: '用户管理', icon: 'unlock-alt', children: [
-          {name: "用户信息", href: 'userInfo'},
-          {name: "借吧", href: 'borrow'}]
+          {name: "用户信息", href: 'userInfo'}
+          ]
         },
         {name: '交易明细', icon: 'file-text-o', href: 'trade'}
       ];
